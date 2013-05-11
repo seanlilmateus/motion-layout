@@ -3,10 +3,16 @@ module Motion
     def initialize(&block)
       @verticals   = []
       @horizontals = []
+      @constraints = []
       @metrics     = {}
 
       yield self
       strain
+    end
+
+    def constraint &blk
+      constraint = ExpressionBuilder.new(@view, @subviews, &blk).apply!
+      @constraints << constraint if constraint.is_a?(NSLayoutConstraint)
     end
 
     def metrics(metrics)
@@ -46,6 +52,7 @@ module Motion
       end
 
       @view.addConstraints(constraints.flatten)
+      @view.addConstraints(@constraints.flatten)
     end
   end
 end
