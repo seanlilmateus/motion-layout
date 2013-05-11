@@ -25,6 +25,10 @@ class TimerController < UIViewController
   attr_reader :timer
 
   def viewDidLoad
+    @red_view = UIView.alloc.initWithFrame(CGRect.new([0.0, 0.0], [100.0, 100.0])).tap do |v|
+      v.backgroundColor = UIColor.greenColor
+      v.alpha = 0.5
+    end
     @state = UILabel.new
     @state.font = UIFont.systemFontOfSize(30)
     @state.text = 'Tap to start'
@@ -39,11 +43,15 @@ class TimerController < UIViewController
 
     Motion::Layout.new do |layout|
       layout.view view
-      layout.subviews "state" => @state, "action" => @action
-      layout.metrics "top" => 200, "margin" => 20, "height" => 40
-      layout.vertical "|-top-[state(==height)]-margin-[action(==height)]"
+      layout.subviews   "state" => @state, "action" => @action, "red_view" => @red_view
+      layout.metrics    "top" => 200, "margin" => 20, "height" => 40
+      layout.vertical   "|-top-[state(==height)]-margin-[action(==height)]"
       layout.horizontal "|-margin-[state]-margin-|"
       layout.horizontal "|-margin-[action]-margin-|"
+      layout.constraint { red_view.centerX == view.centerX }
+      layout.constraint { red_view.top == view.top + 50 }
+      layout.constraint { red_view.width   == state.width * 0.4 }
+      layout.constraint { red_view.height  == view.height * 0.2 }
     end
   end
 
