@@ -3,15 +3,14 @@ module Motion
     def initialize(&block)
       @verticals   = []
       @horizontals = []
-      @constraints = []
       @metrics     = {}
-
-      yield self
+      @constraints = []
+      yield WeakRef.new(self)
       strain
     end
 
     def constraint &blk
-      constraint = ExpressionBuilder.new(@view, @subviews, &blk).apply!
+      constraint = ExpressionBuilder.new( WeakRef.new(@view), @subviews, &blk).apply!
       @constraints << constraint if constraint.is_a?(NSLayoutConstraint)
     end
 
@@ -27,12 +26,12 @@ module Motion
       @view = view
     end
 
-    def horizontal(horizontal)
-      @horizontals << horizontal
+    def horizontal(horizontal, opts=NSLayoutFormatDirectionLeadingToTrailing)
+      @horizontals << [horizontal, opts]
     end
 
-    def vertical(vertical)
-      @verticals << vertical
+    def vertical(vertical, opts=NSLayoutFormatDirectionLeadingToTrailing)
+      @verticals << [vertical, opts]
     end
 
     private
@@ -44,11 +43,11 @@ module Motion
       end
 
       constraints = []
-      constraints += @verticals.map do |vertical|
-        NSLayoutConstraint.constraintsWithVisualFormat("V:#{vertical}", options:NSLayoutFormatAlignAllCenterX, metrics:@metrics, views:@subviews)
+      constraints += @verticals.map do |vertical, option|
+        NSLayoutConstraint.constraintsWithVisualFormat("V:#{vertical}", options:option, metrics:@metrics, views:@subviews)
       end
-      constraints += @horizontals.map do |horizontal|
-        NSLayoutConstraint.constraintsWithVisualFormat("H:#{horizontal}", options:NSLayoutFormatAlignAllCenterY, metrics:@metrics, views:@subviews)
+      constraints += @horizontals.map do |horizontal, option|
+        NSLayoutConstraint.constraintsWithVisualFormat("H:#{horizontal}", options:option, metrics:@metrics, views:@subviews)
       end
 
       @view.addConstraints(constraints.flatten)

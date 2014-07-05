@@ -1,8 +1,7 @@
 module Motion
-  class LayoutExpression < BasicObject
-    attr_accessor :view
-    attr_reader :attribute, :relation, :multiplier, :constant, :other
-  
+  class Expression < BlankSlate
+    attr_reader :attribute, :relation, :multiplier, :constant, :other, :view
+
     LAYOUT_ATTRIBUTES = ::Hash[
       :left,     ::NSLayoutAttributeLeft,
       :right,    ::NSLayoutAttributeRight,
@@ -15,26 +14,30 @@ module Motion
       :centerX,  ::NSLayoutAttributeCenterX,
       :centerY,  ::NSLayoutAttributeCenterY,
       :baseline, ::NSLayoutAttributeBaseline,
+      :none,     ::NSLayoutAttributeNotAnAttribute
     ]
 
-    def init
-      super
-      @attribute  = []
+    # Initializer
+    
+    def initialize(view)
+      @view = view
+      @attribute  = ::NSLayoutAttributeNotAnAttribute
       @constant   = 0.0
       @multiplier = 1.0
-      self
     end
 
     def nil?; false; end
 
     def constraint
-      NSLayoutConstraint.constraintWithItem( self.view,
+      constraint = NSLayoutConstraint.constraintWithItem( self.view,
                                   attribute: self.attribute,
                                   relatedBy: self.relation,
                                      toItem: @other.view,
                                   attribute: @other.attribute,
                                  multiplier: @other.multiplier,
                                    constant: @other.constant)
+      # @other = @relation = @attribute = @multiplier = @constant = nil                   
+      # constraint
     end
 
     def == other
@@ -59,6 +62,12 @@ module Motion
       @multiplier = number.to_f
       self
     end
+    
+    def / number
+      @multiplier = 1.0 / number.to_f
+      self
+    end
+    
 
     def + number
       @constant = number.to_f
@@ -71,17 +80,17 @@ module Motion
     end
 
     private
-    def method_missing(meth, *args, &blk)
-      if LAYOUT_ATTRIBUTES.keys.include? meth
-        @attribute = LAYOUT_ATTRIBUTES[meth] || ::NSLayoutAttributeNotAnAttribute
-        self
-      else
-        super
+      def method_missing(meth, *args, &blk)
+        if LAYOUT_ATTRIBUTES.keys.include? meth
+          @attribute = LAYOUT_ATTRIBUTES[meth]
+          self
+        else
+          super
+        end
       end
-    end
 
-    def respond_to_missing?(method_name, include_private = false)
-      LAYOUT_ATTRIBUTES.keys.include?(method_name) || super
-    end
+      def respond_to_missing?(method_name, include_private = false)
+        LAYOUT_ATTRIBUTES.keys.include?(method_name) || super
+      end
   end
 end
