@@ -9,8 +9,9 @@ module Motion
       strain
     end
 
-    def constraint &blk
+    def constraint(priority=NSLayoutPriorityDefaultHigh, &blk)
       constraint = ExpressionBuilder.new( WeakRef.new(@view), @subviews, &blk).apply!
+      constraint.priority = priority
       @constraints << constraint if constraint.is_a?(NSLayoutConstraint)
     end
 
